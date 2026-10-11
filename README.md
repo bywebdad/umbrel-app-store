@@ -35,7 +35,7 @@ umbrelOS (хост)
 
 ## Установка
 
-1. Тег `v*` запускает workflow **image** во вкладке Actions: тесты и сборка образа `ghcr.io/bywebdad/umbrel-nordvpn:<версия>` для amd64 и arm64.
+1. Push в `main` запускает workflow **image** во вкладке Actions: тесты и сборка образа `ghcr.io/bywebdad/umbrel-nordvpn` для amd64 и arm64. Тег образа берётся из `version` в `webdad-nordvpn/umbrel-app.yml`, git-теги не нужны.
 2. **Пакет в GHCR должен быть публичным** (делается один раз): github.com/bywebdad → Packages → `umbrel-nordvpn` → Package settings → Change visibility → Public. Без этого Umbrel не скачает образ.
 3. В Umbrel: App Store → `⋯` → **Community App Stores** → вставь `https://github.com/bywebdad/umbrel-app-store` → открой магазин **WEBDAD** → установи **NordVPN**.
 
@@ -69,7 +69,7 @@ umbrelOS (хост)
 
 ## Обновление
 
-- Новая версия клиента NordVPN: Actions → image → **Run workflow** (можно закрепить версию) → поставь новый тег `v0.1.1` → подними `version` в `webdad-nordvpn/umbrel-app.yml` и тег образа в `docker-compose.yml` → push. Umbrel предложит обновление.
+- Новая версия: подними `version` в `webdad-nordvpn/umbrel-app.yml` и тег образа в `docker-compose.yml` (одинаковые) → push в `main`. CI соберёт образ с этим тегом, Umbrel предложит обновление. Свежий клиент NordVPN подтягивается при каждой сборке; закрепить версию можно через Actions → image → Run workflow.
 - Логин и Meshnet-устройство хранятся в данных приложения и переживают обновления. При переустановке приложения данные удаляются: нужно войти заново, и Umbrel появится в Meshnet как новое устройство.
 
 ## Разработка

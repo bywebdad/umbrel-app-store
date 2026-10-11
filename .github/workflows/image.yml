@@ -4,7 +4,7 @@ on:
   push:
     branches: [main]
     tags: ["v*"]
-    paths: ["image/**", ".github/workflows/image.yml"]
+    paths: ["image/**", ".github/workflows/image.yml", "webdad-nordvpn/umbrel-app.yml"]
   pull_request:
     paths: ["image/**"]
   workflow_dispatch:
@@ -51,12 +51,19 @@ jobs:
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
+      # Image version = app version in umbrel-app.yml (single source of truth),
+      # so a version bump on main is enough — no git tag needed.
+      - id: ver
+        run: |
+          v=$(grep -m1 '^version:' webdad-nordvpn/umbrel-app.yml | cut -d: -f2 | tr -d ' "')
+          echo "version=$v" >> "$GITHUB_OUTPUT"
       - id: meta
         uses: docker/metadata-action@v5
         with:
           images: ${{ env.IMAGE }}
           tags: |
             type=semver,pattern={{version}}
+            type=raw,value=${{ steps.ver.outputs.version }},enable={{is_default_branch}}
             type=raw,value=edge,enable={{is_default_branch}}
             type=sha,format=short
       - uses: docker/build-push-action@v6
