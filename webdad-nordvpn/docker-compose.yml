@@ -1,0 +1,51 @@
+version: "3.7"
+
+services:
+  app_proxy:
+    environment:
+      # <app-id>_<service>_1 — the panel sits behind Umbrel's login
+      APP_HOST: webdad-nordvpn_web_1
+      APP_PORT: 8080
+
+  # Official NordVPN daemon in the host network namespace: its VPN routes
+  # and the Meshnet interface apply to the whole Umbrel.
+  daemon:
+    image: ghcr.io/bywebdad/umbrel-nordvpn:0.1.0
+    command: ["daemon"]
+    network_mode: host
+    # nordvpnd manages host routes, nftables/iptables rules and the NordLynx
+    # (WireGuard) interface; Meshnet needs more than NET_ADMIN alone.
+    privileged: true
+    restart: unless-stopped
+    # Gives the daemon time to disconnect and remove its routes on stop.
+    stop_grace_period: 1m
+    environment:
+      NORD_LAN_DISCOVERY: "on"
+      # Add "100.64.0.0/10" here if Tailscale also stays installed.
+      NORD_ALLOWLIST_SUBNETS: ""
+      NORD_ANALYTICS: "off"
+    volumes:
+      - ${APP_DATA_DIR}/data/nordvpn:/var/lib/nordvpn
+      - nordvpn-run:/run/nordvpn
+      - /lib/modules:/lib/modules:ro
+    devices:
+      - /dev/net/tun:/dev/net/tun
+    healthcheck:
+      test: ["CMD", "nordvpn", "status"]
+      interval: 1m
+      timeout: 20s
+      retries: 3
+      start_period: 1m
+
+  # Web panel. Talks to the daemon only through the shared unix socket.
+  web:
+    image: ghcr.io/bywebdad/umbrel-nordvpn:0.1.0
+    command: ["panel"]
+    restart: unless-stopped
+    depends_on:
+      - daemon
+    volumes:
+      - nordvpn-run:/run/nordvpn
+
+volumes:
+  nordvpn-run:

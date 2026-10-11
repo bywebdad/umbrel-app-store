@@ -1,0 +1,41 @@
+manifestVersion: 1
+id: webdad-nordvpn
+name: NordVPN
+tagline: VPN for the whole Umbrel and Meshnet access from your devices
+icon: https://raw.githubusercontent.com/bywebdad/umbrel-app-store/main/webdad-nordvpn/icon.svg
+category: networking
+version: "0.1.0"
+port: 8794
+description: >-
+  Runs the official NordVPN Linux client on your Umbrel.
+
+
+  VPN: all outgoing traffic of the server and its apps goes through NordVPN.
+  Your local network and Docker networks stay outside the tunnel (LAN Discovery),
+  so the Umbrel dashboard and apps remain reachable at home.
+
+
+  Meshnet: your phone and laptop with the NordVPN app can reach this Umbrel and
+  its apps from anywhere, while their own traffic stays protected by NordVPN —
+  one app on every device.
+
+
+  Requires a NordVPN subscription. Log in with an access token from Nord Account
+  (NordVPN → Manual setup → Access token).
+
+
+  Community package, not affiliated with Nord Security.
+developer: Nord Security (client), packaged by WEBDAD
+website: https://nordvpn.com
+submitter: WEBDAD
+submission: https://github.com/bywebdad/umbrel-app-store
+repo: https://github.com/bywebdad/umbrel-app-store
+support: https://github.com/bywebdad/umbrel-app-store/issues
+gallery: []
+releaseNotes: >-
+  First version: VPN for the whole server, Meshnet, kill switch, auto-connect,
+  allowlist and a web panel behind Umbrel login.
+dependencies: []
+path: ""
+defaultUsername: ""
+defaultPassword: ""

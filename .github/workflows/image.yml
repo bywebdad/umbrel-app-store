@@ -1,0 +1,72 @@
+name: image
+
+on:
+  push:
+    branches: [main]
+    tags: ["v*"]
+    paths: ["image/**", ".github/workflows/image.yml"]
+  pull_request:
+    paths: ["image/**"]
+  workflow_dispatch:
+    inputs:
+      nordvpn_version:
+        description: "Pin NordVPN client version (empty = latest)"
+        required: false
+        default: ""
+
+permissions:
+  contents: read
+  packages: write
+
+env:
+  IMAGE: ghcr.io/${{ github.repository_owner }}/umbrel-nordvpn
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: "1.24"
+      - name: Go vet & test
+        working-directory: image/panel
+        run: |
+          test -z "$(gofmt -l .)"
+          go vet ./...
+          go test -count=1 ./...
+      - name: Shellcheck
+        run: shellcheck image/rootfs/usr/local/bin/*.sh
+
+  build:
+    needs: test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: docker/setup-qemu-action@v3
+      - uses: docker/setup-buildx-action@v3
+      - uses: docker/login-action@v3
+        if: github.event_name != 'pull_request'
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.IMAGE }}
+          tags: |
+            type=semver,pattern={{version}}
+            type=raw,value=edge,enable={{is_default_branch}}
+            type=sha,format=short
+      - uses: docker/build-push-action@v6
+        with:
+          context: image
+          platforms: linux/amd64,linux/arm64
+          push: ${{ github.event_name != 'pull_request' }}
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          build-args: |
+            NORDVPN_VERSION=${{ github.event.inputs.nordvpn_version }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max

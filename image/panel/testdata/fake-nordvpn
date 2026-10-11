@@ -1,0 +1,12 @@
+#!/usr/bin/env bash
+case "$*" in
+  status) printf '\r-\r  \rStatus: Connected\nCountry: Poland\nCity: Warsaw\nIP: 1.2.3.4\n';;
+  account) printf 'Email Address: me@example.com\nVPN Service: Active\n';;
+  settings) printf 'Kill Switch: disabled\nAuto-connect: enabled\nMeshnet: enabled\nLAN Discovery: enabled\nAllowlisted subnets:\n\t100.64.0.0/10\n';;
+  version) echo "NordVPN Version 4.1.0";;
+  "meshnet peer list") printf 'This device:\nHostname: umbrel-abc.nord\nIP: 100.70.1.2\n';;
+  countries) printf 'Germany, Poland\tUnited_States\n';;
+  groups) printf 'P2P, Double_VPN\n';;
+  connect*) echo "You are connected to $2"; ;;
+  *) echo "unknown $*" >&2; exit 1;;
+esac

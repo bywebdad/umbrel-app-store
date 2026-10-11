@@ -1,0 +1,284 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>NordVPN · Umbrel</title>
+<style>
+:root{
+  --bg:#f4f5f7;--card:#fff;--ink:#14161a;--muted:#6b7280;--line:#e5e7eb;
+  --accent:#3b5bdb;--ok:#2f9e44;--warn:#e8590c;--bad:#c92a2a;--chip:#eef1f6;
+}
+@media (prefers-color-scheme:dark){:root{
+  --bg:#0f1115;--card:#171a20;--ink:#e8eaee;--muted:#9aa1ad;--line:#262a33;
+  --accent:#748ffc;--ok:#51cf66;--warn:#ff922b;--bad:#ff6b6b;--chip:#20242c;
+}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.45 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+main{max-width:980px;margin:0 auto;padding:24px 16px 48px}
+header{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:20px;flex-wrap:wrap}
+h1{font-size:22px;margin:0;letter-spacing:-.01em}
+h2{font-size:15px;margin:0 0 12px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);font-weight:600}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:16px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:18px}
+.wide{grid-column:1/-1}
+.pill{display:inline-flex;align-items:center;gap:8px;padding:6px 12px;border-radius:999px;background:var(--chip);font-weight:600;font-size:14px}
+.dot{width:9px;height:9px;border-radius:50%;background:var(--muted)}
+.on .dot{background:var(--ok)} .off .dot{background:var(--warn)} .down .dot{background:var(--bad)}
+dl{display:grid;grid-template-columns:auto 1fr;gap:4px 14px;margin:0 0 14px;font-size:14px}
+dt{color:var(--muted)} dd{margin:0;word-break:break-word}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+input,select{font:inherit;color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:9px;padding:8px 10px;min-width:0;flex:1}
+button{font:inherit;font-weight:600;border:0;border-radius:9px;padding:8px 14px;cursor:pointer;background:var(--accent);color:#fff}
+button.ghost{background:var(--chip);color:var(--ink)}
+button.danger{background:var(--bad)}
+button:disabled{opacity:.5;cursor:wait}
+.toggle{display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-top:1px solid var(--line);gap:12px}
+.toggle:first-of-type{border-top:0}
+.toggle small{display:block;color:var(--muted);font-size:12.5px}
+.switch{position:relative;width:44px;height:24px;flex:none}
+.switch input{opacity:0;width:0;height:0}
+.slider{position:absolute;inset:0;background:var(--line);border-radius:24px;transition:.15s;cursor:pointer}
+.slider:before{content:"";position:absolute;width:18px;height:18px;left:3px;top:3px;background:#fff;border-radius:50%;transition:.15s}
+.switch input:checked+.slider{background:var(--accent)}
+.switch input:checked+.slider:before{transform:translateX(20px)}
+pre{background:var(--bg);border:1px solid var(--line);border-radius:9px;padding:10px;font-size:12.5px;overflow:auto;max-height:280px;margin:0;white-space:pre-wrap}
+ul.list{list-style:none;padding:0;margin:0 0 10px}
+ul.list li{display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px dashed var(--line);font-family:ui-monospace,monospace;font-size:13.5px}
+ul.list button{padding:3px 9px;font-size:12px}
+.hint{color:var(--muted);font-size:13px;margin:8px 0 0}
+.warn{color:var(--warn)}
+#toast{position:fixed;left:50%;bottom:20px;transform:translateX(-50%);max-width:min(560px,92vw);padding:10px 14px;border-radius:10px;background:var(--ink);color:var(--bg);font-size:14px;display:none;white-space:pre-wrap}
+#toast.err{background:var(--bad);color:#fff}
+.hidden{display:none!important}
+a{color:var(--accent)}
+</style>
+</head>
+<body>
+<main>
+  <header>
+    <h1>NordVPN на Umbrel</h1>
+    <span id="pill" class="pill down"><span class="dot"></span><span id="pillText">Загрузка…</span></span>
+  </header>
+
+  <div id="daemonDown" class="card wide hidden" style="margin-bottom:16px">
+    <h2>Демон недоступен</h2>
+    <p id="daemonErr" class="warn"></p>
+    <p class="hint">Контейнер <code>daemon</code> ещё запускается или упал. Логи: приложение → ⋯ → Troubleshoot.</p>
+  </div>
+
+  <div class="grid">
+    <section class="card" id="accountCard">
+      <h2>Аккаунт</h2>
+      <div id="loggedOut" class="hidden">
+        <p class="hint" style="margin-top:0">Создайте токен: <a href="https://my.nordaccount.com/dashboard/nordvpn/manual-configuration/" target="_blank" rel="noopener">Nord Account → NordVPN → Manual setup</a> → «Access token».</p>
+        <div class="row">
+          <input id="token" type="password" autocomplete="off" placeholder="Access token">
+          <button data-act="login">Войти</button>
+        </div>
+      </div>
+      <div id="loggedIn" class="hidden">
+        <dl id="accountInfo"></dl>
+        <button class="ghost" data-act="logout">Выйти</button>
+      </div>
+    </section>
+
+    <section class="card">
+      <h2>VPN всего сервера</h2>
+      <dl id="statusInfo"></dl>
+      <div class="row">
+        <input id="target" list="locations" placeholder="Страна / город / группа">
+        <datalist id="locations"></datalist>
+      </div>
+      <div class="row" style="margin-top:10px">
+        <button data-act="connect">Подключить</button>
+        <button class="ghost" data-act="disconnect">Отключить</button>
+      </div>
+      <p class="hint">Пустое поле — быстрейший сервер. Через VPN пойдёт исходящий трафик всего Umbrel, включая все приложения. Локальная сеть и Meshnet остаются доступны.</p>
+    </section>
+
+    <section class="card">
+      <h2>Поведение</h2>
+      <div class="toggle"><div>Автоподключение<small>Подключаться при старте (после перезагрузки Umbrel) к выбранной выше локации</small></div>
+        <label class="switch"><input type="checkbox" data-set="autoconnect"><span class="slider"></span></label></div>
+      <div class="toggle"><div>Kill Switch<small class="warn">Если VPN упадёт — у Umbrel пропадёт интернет, пока соединение не восстановится</small></div>
+        <label class="switch"><input type="checkbox" data-set="killswitch"><span class="slider"></span></label></div>
+      <div class="toggle"><div>LAN Discovery<small>Доступ к Umbrel из локальной сети и к сетям Docker. Выключать не стоит</small></div>
+        <label class="switch"><input type="checkbox" data-set="lan-discovery"><span class="slider"></span></label></div>
+    </section>
+
+    <section class="card">
+      <h2>Meshnet</h2>
+      <div class="toggle"><div>Meshnet<small>Umbrel виден твоим устройствам с NordVPN по nord-имени</small></div>
+        <label class="switch"><input type="checkbox" data-set="meshnet"><span class="slider"></span></label></div>
+      <div id="peersBox" class="hidden">
+        <pre id="peers"></pre>
+        <div class="row" style="margin-top:10px"><button class="ghost" data-act="peers-refresh">Обновить пиров</button></div>
+        <p class="hint" style="margin-bottom:6px">Что Umbrel разрешает устройству:</p>
+        <div class="row"><input id="peerId" placeholder="hostname или IP устройства"></div>
+        <div class="row" style="margin-top:8px">
+          <select id="peerPerm" style="flex:1 1 100%">
+            <option value="incoming">Входящие к Umbrel</option>
+            <option value="local">Доступ к LAN Umbrel</option>
+            <option value="routing">Интернет через Umbrel</option>
+          </select>
+          <button data-act="peer-allow">Разрешить</button>
+          <button class="ghost" data-act="peer-deny">Запретить</button>
+        </div>
+      </div>
+    </section>
+
+    <section class="card wide">
+      <h2>Исключения из VPN (allowlist)</h2>
+      <div class="grid" style="gap:12px">
+        <div><strong>Подсети</strong><ul class="list" id="subnets"></ul></div>
+        <div><strong>Порты</strong><ul class="list" id="ports"></ul></div>
+      </div>
+      <div class="row">
+        <select id="alKind" style="flex:0 0 120px"><option value="subnet">Подсеть</option><option value="port">Порт</option></select>
+        <input id="alValue" placeholder="100.64.0.0/10 или 22">
+        <button data-act="allowlist">Добавить</button>
+      </div>
+      <p class="hint">Трафик в эти подсети/порты идёт мимо туннеля. Пример: <code>100.64.0.0/10</code>, если параллельно оставляешь Tailscale.</p>
+    </section>
+
+    <section class="card wide">
+      <h2>Диагностика</h2>
+      <dl id="diag"></dl>
+      <pre id="lastOut">—</pre>
+    </section>
+  </div>
+</main>
+<div id="toast"></div>
+
+<script>
+const $ = (id) => document.getElementById(id);
+let busy = false, state = null;
+
+const norm = (k) => k.toLowerCase().replace(/[^a-z]/g, "");
+const setting = (name) => {
+  if (!state) return "";
+  const kv = state.settings.find((x) => norm(x.key) === norm(name));
+  return kv ? kv.value.toLowerCase() : "";
+};
+const listOf = (word) => {
+  const kv = (state?.settings || []).find((x) => norm(x.key).includes(word));
+  return kv?.list || [];
+};
+
+function toast(msg, err) {
+  const t = $("toast");
+  t.textContent = msg; t.className = err ? "err" : ""; t.style.display = "block";
+  clearTimeout(t._h); t._h = setTimeout(() => (t.style.display = "none"), err ? 8000 : 3500);
+}
+
+function dl(el, kvs, skip = []) {
+  el.replaceChildren();
+  for (const kv of kvs) {
+    if (!kv.value || skip.includes(kv.key)) continue;
+    const dt = document.createElement("dt"); dt.textContent = kv.key;
+    const dd = document.createElement("dd"); dd.textContent = kv.value;
+    el.append(dt, dd);
+  }
+}
+
+function list(el, items, kind) {
+  el.replaceChildren();
+  if (!items.length) { const li = document.createElement("li"); li.textContent = "—"; el.append(li); return; }
+  for (const v of items) {
+    const li = document.createElement("li");
+    const span = document.createElement("span"); span.textContent = v;
+    const b = document.createElement("button"); b.className = "ghost"; b.textContent = "Убрать";
+    b.onclick = () => act("allowlist", { kind, value: v, remove: true });
+    li.append(span, b); el.append(li);
+  }
+}
+
+function render() {
+  const pill = $("pill"), txt = $("pillText");
+  $("daemonDown").classList.toggle("hidden", state.daemon);
+  $("daemonErr").textContent = state.error || "";
+  if (!state.daemon) { pill.className = "pill down"; txt.textContent = "Демон недоступен"; return; }
+  if (state.connected) {
+    pill.className = "pill on";
+    const where = [state.status.find(x=>x.key==="Country")?.value, state.status.find(x=>x.key==="City")?.value].filter(Boolean).join(", ");
+    txt.textContent = "VPN: " + (where || "подключён");
+  } else { pill.className = "pill off"; txt.textContent = "VPN отключён"; }
+
+  $("loggedIn").classList.toggle("hidden", !state.loggedIn);
+  $("loggedOut").classList.toggle("hidden", state.loggedIn);
+  dl($("accountInfo"), state.account);
+  dl($("statusInfo"), state.status);
+
+  for (const cb of document.querySelectorAll("[data-set]")) {
+    cb.checked = setting(cb.dataset.set).startsWith("enabled");
+    cb.disabled = busy || !state.loggedIn && cb.dataset.set === "meshnet";
+  }
+  const mesh = setting("meshnet").startsWith("enabled");
+  $("peersBox").classList.toggle("hidden", !mesh);
+  $("peers").textContent = state.peers || "—";
+  list($("subnets"), listOf("subnets"), "subnet");
+  list($("ports"), listOf("ports"), "port");
+  dl($("diag"), [{ key: "Клиент", value: state.version }, ...state.settings.filter((x) => !x.list)]);
+}
+
+async function refresh() {
+  if (busy) return;
+  try {
+    const r = await fetch("api/state", { cache: "no-store" });
+    state = await r.json();
+    render();
+  } catch (e) { $("pillText").textContent = "Панель недоступна"; }
+}
+
+async function act(name, body = {}) {
+  if (busy) return;
+  busy = true;
+  document.querySelectorAll("button,[data-set]").forEach((b) => (b.disabled = true));
+  toast("Выполняю…");
+  try {
+    const r = await fetch("api/action/" + name, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "X-Requested-With": "nordpanel" },
+      body: JSON.stringify(body),
+    });
+    const j = await r.json();
+    $("lastOut").textContent = j.output || j.error || "OK";
+    if (!r.ok) toast(j.error || "Ошибка", true); else toast("Готово");
+  } catch (e) { toast(String(e), true); }
+  busy = false;
+  document.querySelectorAll("button").forEach((b) => (b.disabled = false));
+  await refresh();
+}
+
+document.addEventListener("click", (e) => {
+  const a = e.target.closest("button[data-act]");
+  if (!a) return;
+  const n = a.dataset.act;
+  if (n === "login") { act("login", { token: $("token").value }); $("token").value = ""; }
+  else if (n === "connect") act("connect", { target: $("target").value });
+  else if (n === "allowlist") act("allowlist", { kind: $("alKind").value, value: $("alValue").value });
+  else if (n === "peer-allow" || n === "peer-deny") act("peer", { name: $("peerPerm").value, on: n === "peer-allow", value: $("peerId").value });
+  else if (n === "logout" && !confirm("Выйти из аккаунта NordVPN на Umbrel? VPN и Meshnet отключатся.")) return;
+  else act(n);
+});
+
+document.addEventListener("change", (e) => {
+  const cb = e.target.closest("[data-set]");
+  if (!cb) return;
+  const name = cb.dataset.set, on = cb.checked;
+  if (name === "lan-discovery" && !on && !confirm("Без LAN Discovery при включённом VPN Umbrel может пропасть из локальной сети. Точно выключить?")) { cb.checked = true; return; }
+  if (name === "killswitch" && on && !confirm("С Kill Switch при обрыве VPN у Umbrel не будет интернета. Включить?")) { cb.checked = false; return; }
+  act("set", { name, on, target: name === "autoconnect" ? $("target").value : "" });
+});
+
+fetch("api/countries").then((r) => r.json()).then((j) => {
+  const dlist = $("locations");
+  for (const c of [...j.groups, ...j.countries]) { const o = document.createElement("option"); o.value = c; dlist.append(o); }
+}).catch(() => {});
+
+refresh();
+setInterval(refresh, 10000);
+</script>
+</body>
+</html>
