@@ -10,7 +10,7 @@ services:
   # Official NordVPN daemon in the host network namespace: its VPN routes
   # and the Meshnet interface apply to the whole Umbrel.
   daemon:
-    image: ghcr.io/bywebdad/umbrel-nordvpn:0.2.0
+    image: ghcr.io/bywebdad/umbrel-nordvpn:0.2.1
     command: ["daemon"]
     network_mode: host
     # nordvpnd manages host routes, nftables/iptables rules and the NordLynx
@@ -40,7 +40,7 @@ services:
 
   # Web panel. Talks to the daemon only through the shared unix socket.
   web:
-    image: ghcr.io/bywebdad/umbrel-nordvpn:0.2.0
+    image: ghcr.io/bywebdad/umbrel-nordvpn:0.2.1
     command: ["panel"]
     restart: unless-stopped
     depends_on:

@@ -74,6 +74,62 @@ func TestParsePeers(t *testing.T) {
 	}
 }
 
+// Real output after nicknames were set: Nickname precedes Hostname.
+const peerListNickFirst = `This device:
+Nickname: umbrel-home
+Hostname: ivan.barysiuk-himalayas.nord
+IP: 100.80.19.203
+OS: linux
+Distribution: Ubuntu
+
+Local Peers:
+Nickname: mac-m1-pro
+Hostname: ivan.barysiuk-everest.nord
+Status: connected
+IP: 100.80.16.90
+OS: macos
+Distribution: 27.0.1
+Allow Incoming Traffic: enabled
+Allow Routing: disabled
+Allow Local Network Access: enabled
+Allows Incoming Traffic: enabled
+Allows Local Network Access: disabled
+
+Nickname: iphone-15-pro
+Hostname: ivan.barysiuk-alps.nord
+Status: connected
+IP: 100.80.26.201
+OS: ios
+Distribution: 27.0
+Allow Incoming Traffic: enabled
+Allow Local Network Access: disabled
+
+
+External Peers:
+[no peers]
+`
+
+func TestParsePeersNicknameFirst(t *testing.T) {
+	peers := ParsePeers(CleanOutput(peerListNickFirst))
+	want := []struct{ host, nick, ip, section string }{
+		{"ivan.barysiuk-himalayas.nord", "umbrel-home", "100.80.19.203", "self"},
+		{"ivan.barysiuk-everest.nord", "mac-m1-pro", "100.80.16.90", "local"},
+		{"ivan.barysiuk-alps.nord", "iphone-15-pro", "100.80.26.201", "local"},
+	}
+	if len(peers) != len(want) {
+		t.Fatalf("got %d peers: %+v", len(peers), peers)
+	}
+	for i, w := range want {
+		p := peers[i]
+		if p.Hostname != w.host || p.Nickname != w.nick || p.IP != w.ip || p.Section != w.section {
+			t.Fatalf("peer %d: got %+v want %+v", i, p, w)
+		}
+	}
+	if !peers[1].Perms["local"] || peers[2].Perms["local"] || !peers[2].Perms["incoming"] {
+		t.Fatalf("perms: %+v / %+v", peers[1].Perms, peers[2].Perms)
+	}
+}
+
 func TestParseAccount(t *testing.T) {
 	kv := ParseKV(CleanOutput(accountRaw))
 	if !LoggedIn(accountRaw) || Get(kv, "Subscription") != "Active until Aug 27, 2028" || Get(kv, "Email address") != "ivan@example.com" {

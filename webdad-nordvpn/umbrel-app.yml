@@ -4,7 +4,7 @@ name: NordVPN
 tagline: VPN for the whole Umbrel and Meshnet access from your devices
 icon: https://raw.githubusercontent.com/bywebdad/umbrel-app-store/main/webdad-nordvpn/icon.svg
 category: networking
-version: "0.2.0"
+version: "0.2.1"
 port: 8794
 description: >-
   Runs the official NordVPN Linux client on your Umbrel.
@@ -33,9 +33,8 @@ repo: https://github.com/bywebdad/umbrel-app-store
 support: https://github.com/bywebdad/umbrel-app-store/issues
 gallery: []
 releaseNotes: >-
-  New control panel: a traffic route at the top (Umbrel, NordVPN server,
-  internet), Meshnet devices with one-click permissions and renaming,
-  a cleaner account section and a collapsible diagnostics block.
+  Fixes device names in the Meshnet list when nicknames are set
+  (names were shifted by one device).
 dependencies: []
 path: ""
 defaultUsername: ""

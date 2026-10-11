@@ -172,20 +172,25 @@ var peerPermKeys = map[string]string{
 }
 
 // ParsePeers parses cleaned `nordvpn meshnet peer list` output.
+// The CLI prints "Hostname:" and "Nickname:" in either order (Nickname comes
+// first once a nickname is set), so a new peer starts at whichever of the two
+// appears when the current peer already has it, or right after a section header.
 func ParsePeers(s string) []Peer {
 	res := []Peer{}
 	section := ""
+	fresh := true
+	var hasHost, hasNick bool
 	for _, line := range strings.Split(s, "\n") {
 		t := strings.TrimSpace(line)
 		switch strings.ToLower(strings.TrimSuffix(t, ":")) {
 		case "this device":
-			section = "self"
+			section, fresh = "self", true
 			continue
 		case "local peers":
-			section = "local"
+			section, fresh = "local", true
 			continue
 		case "external peers":
-			section = "external"
+			section, fresh = "external", true
 			continue
 		}
 		k, v, ok := strings.Cut(t, ":")
@@ -193,24 +198,32 @@ func ParsePeers(s string) []Peer {
 			continue
 		}
 		k, v = strings.TrimSpace(k), strings.TrimSpace(v)
-		if strings.EqualFold(k, "Hostname") {
-			res = append(res, Peer{Section: section, Hostname: v, Perms: map[string]bool{}})
+		lk := strings.ToLower(k)
+		if lk == "hostname" || lk == "nickname" {
+			if fresh || (lk == "hostname" && hasHost) || (lk == "nickname" && hasNick) {
+				res = append(res, Peer{Section: section, Perms: map[string]bool{}})
+				fresh, hasHost, hasNick = false, false, false
+			}
+			p := &res[len(res)-1]
+			if lk == "hostname" {
+				p.Hostname, hasHost = v, true
+			} else {
+				hasNick = true
+				if v != "-" {
+					p.Nickname = v
+				}
+			}
 			continue
 		}
-		if len(res) == 0 {
+		if len(res) == 0 || fresh {
 			continue
 		}
 		p := &res[len(res)-1]
-		lk := strings.ToLower(k)
 		if perm, ok := peerPermKeys[lk]; ok {
 			p.Perms[perm] = strings.EqualFold(v, "enabled")
 			continue
 		}
 		switch lk {
-		case "nickname":
-			if v != "-" {
-				p.Nickname = v
-			}
 		case "ip":
 			p.IP = v
 		case "status":
