@@ -21,7 +21,8 @@ services:
     stop_grace_period: 1m
     environment:
       NORD_LAN_DISCOVERY: "on"
-      # Add "100.64.0.0/10" here if Tailscale also stays installed.
+      # Comma-separated subnets to keep outside the VPN tunnel, e.g. "192.168.50.0/24".
+      # Note: Tailscale on the same Umbrel blocks Meshnet (both use 100.64.0.0/10); uninstall it.
       NORD_ALLOWLIST_SUBNETS: ""
       NORD_ANALYTICS: "off"
     volumes:

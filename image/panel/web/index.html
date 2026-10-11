@@ -136,10 +136,10 @@ a{color:var(--accent)}
       </div>
       <div class="row">
         <select id="alKind" style="flex:0 0 120px"><option value="subnet">Подсеть</option><option value="port">Порт</option></select>
-        <input id="alValue" placeholder="100.64.0.0/10 или 22">
+        <input id="alValue" placeholder="192.168.50.0/24 или 22">
         <button data-act="allowlist">Добавить</button>
       </div>
-      <p class="hint">Трафик в эти подсети/порты идёт мимо туннеля. Пример: <code>100.64.0.0/10</code>, если параллельно оставляешь Tailscale.</p>
+      <p class="hint">Трафик в эти подсети/порты идёт мимо туннеля. Пример: подсеть другого офиса или устройства, к которому нужно ходить напрямую.</p>
     </section>
 
     <section class="card wide">
