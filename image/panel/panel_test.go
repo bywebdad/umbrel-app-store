@@ -16,6 +16,71 @@ const statusRaw = "\r-\r  \r\r-\r  \rStatus: Connected\nServer: Poland #123\nHos
 
 const settingsRaw = "\x1b[0mTechnology: NORDLYNX\nFirewall: enabled\nFirewall Mark: 0xe1f1\nRouting: enabled\nAnalytics: disabled\nKill Switch: disabled\nThreat Protection Lite: disabled\nNotify: disabled\nAuto-connect: enabled\nIPv6: disabled\nMeshnet: enabled\nDNS: disabled\nLAN Discovery: enabled\nAllowlisted subnets:\n\t100.64.0.0/10\n\t192.168.50.0/24\nAllowlisted ports:\n\t22 (UDP|TCP)\n"
 
+// Real output captured on the user's Umbrel (keys anonymised only where needed).
+const peerListRaw = `This device:
+Hostname: ivan.barysiuk-himalayas.nord
+Nickname: -
+IP: 100.80.19.203
+Public Key: EwJlU6eME9W83e2T/mt6Y3DXBJKcwl3xDeY2wrISMVg=
+OS: linux
+Distribution: Ubuntu
+
+Local Peers:
+Hostname: ivan.barysiuk-everest.nord
+Nickname: ivan-mac
+Status: connected
+IP: 100.80.16.90
+Public Key: fYUCqJyVWbyngKusRNMf+iaGvaTQxfRqrH0oB7UxH2k=
+OS: macos
+Distribution: 27.0.1
+Allow Incoming Traffic: enabled
+Allow Routing: disabled
+Allow Local Network Access: enabled
+Allow Sending Files: enabled
+Allows Incoming Traffic: enabled
+Allows Routing: disabled
+Allows Local Network Access: disabled
+Allows Sending Files: enabled
+Accept Fileshare Automatically: disabled
+
+
+External Peers:
+[no peers]
+`
+
+const accountRaw = `Account information:
+Email address: ivan@example.com
+Account created: Aug 27, 2026
+Subscription: Active until Aug 27, 2028
+Dedicated IP: Inactive
+Multi-factor authentication (MFA): Turned off
+Terms of Service - https://my.nordaccount.com/legal/terms-of-service/?utm_medium=app
+`
+
+func TestParsePeers(t *testing.T) {
+	peers := ParsePeers(CleanOutput(peerListRaw))
+	if len(peers) != 2 {
+		t.Fatalf("want 2 peers, got %+v", peers)
+	}
+	self, mac := peers[0], peers[1]
+	if self.Section != "self" || self.Nickname != "" || self.IP != "100.80.19.203" || self.OS != "linux" {
+		t.Fatalf("self: %+v", self)
+	}
+	if mac.Section != "local" || mac.Nickname != "ivan-mac" || mac.Status != "connected" {
+		t.Fatalf("mac: %+v", mac)
+	}
+	if !mac.Perms["incoming"] || mac.Perms["routing"] || !mac.Perms["local"] || mac.Perms["peerLocal"] || !mac.Perms["peerIncoming"] {
+		t.Fatalf("perms: %+v", mac.Perms)
+	}
+}
+
+func TestParseAccount(t *testing.T) {
+	kv := ParseKV(CleanOutput(accountRaw))
+	if !LoggedIn(accountRaw) || Get(kv, "Subscription") != "Active until Aug 27, 2028" || Get(kv, "Email address") != "ivan@example.com" {
+		t.Fatalf("account: %+v", kv)
+	}
+}
+
 func TestCleanOutput(t *testing.T) {
 	got := CleanOutput(statusRaw)
 	if !strings.HasPrefix(got, "Status: Connected\n") {
@@ -97,6 +162,12 @@ func TestActionValidation(t *testing.T) {
 		{"peer", actionReq{Name: "routing", On: false, Value: "100.70.1.9"}, []string{"meshnet", "peer", "routing", "deny", "100.70.1.9"}, false},
 		{"peer", actionReq{Name: "fileshare", On: true, Value: "x"}, nil, true},
 		{"peer", actionReq{Name: "local", On: true, Value: "-rf"}, nil, true},
+		{"nickname", actionReq{Target: "home-umbrel"}, []string{"meshnet", "set", "nickname", "home-umbrel"}, false},
+		{"nickname", actionReq{}, []string{"meshnet", "remove", "nickname"}, false},
+		{"nickname", actionReq{Value: "ivan.barysiuk-everest.nord", Target: "ivan-mac"}, []string{"meshnet", "peer", "nickname", "set", "ivan.barysiuk-everest.nord", "ivan-mac"}, false},
+		{"nickname", actionReq{Value: "ivan-mac"}, []string{"meshnet", "peer", "nickname", "remove", "ivan-mac"}, false},
+		{"nickname", actionReq{Target: "home umbrel"}, nil, true},
+		{"nickname", actionReq{Target: "-x"}, nil, true},
 		{"rm", actionReq{}, nil, true},
 	}
 	for _, c := range cases {
@@ -136,7 +207,7 @@ func TestStateAndCSRF(t *testing.T) {
 		"settings":          settingsRaw,
 		"account":           "Email Address: me@example.com\nVPN Service: Active",
 		"version":           "NordVPN Version 4.1.0",
-		"meshnet peer list": "This device:\nHostname: umbrel-xyz.nord\n",
+		"meshnet peer list": peerListRaw,
 		"connect Germany":   "Connecting to Germany #1\nYou are connected",
 	}}
 	h := (&Server{nord: f}).routes()
@@ -147,7 +218,7 @@ func TestStateAndCSRF(t *testing.T) {
 	if err := json.Unmarshal(rec.Body.Bytes(), &st); err != nil {
 		t.Fatal(err)
 	}
-	if !st.Daemon || !st.Connected || !st.LoggedIn || !strings.Contains(st.Peers, "umbrel-xyz") {
+	if !st.Daemon || !st.Connected || !st.LoggedIn || len(st.Peers) != 2 {
 		t.Fatalf("state: %+v", st)
 	}
 

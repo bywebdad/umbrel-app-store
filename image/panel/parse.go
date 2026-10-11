@@ -145,3 +145,83 @@ func FirstLine(s string) string {
 	}
 	return s
 }
+
+// Peer is one device from `nordvpn meshnet peer list`.
+// Perms holds what THIS Umbrel allows the peer (incoming, routing, local, files)
+// and what the peer allows Umbrel (peerIncoming, peerRouting, peerLocal).
+type Peer struct {
+	Section  string          `json:"section"` // self | local | external
+	Hostname string          `json:"hostname"`
+	Nickname string          `json:"nickname"`
+	IP       string          `json:"ip"`
+	Status   string          `json:"status"`
+	OS       string          `json:"os"`
+	Distro   string          `json:"distro"`
+	Perms    map[string]bool `json:"perms"`
+}
+
+var peerPermKeys = map[string]string{
+	"allow incoming traffic":      "incoming",
+	"allow routing":               "routing",
+	"allow local network access":  "local",
+	"allow sending files":         "files",
+	"allows incoming traffic":     "peerIncoming",
+	"allows routing":              "peerRouting",
+	"allows local network access": "peerLocal",
+	"allows sending files":        "peerFiles",
+}
+
+// ParsePeers parses cleaned `nordvpn meshnet peer list` output.
+func ParsePeers(s string) []Peer {
+	res := []Peer{}
+	section := ""
+	for _, line := range strings.Split(s, "\n") {
+		t := strings.TrimSpace(line)
+		switch strings.ToLower(strings.TrimSuffix(t, ":")) {
+		case "this device":
+			section = "self"
+			continue
+		case "local peers":
+			section = "local"
+			continue
+		case "external peers":
+			section = "external"
+			continue
+		}
+		k, v, ok := strings.Cut(t, ":")
+		if !ok {
+			continue
+		}
+		k, v = strings.TrimSpace(k), strings.TrimSpace(v)
+		if strings.EqualFold(k, "Hostname") {
+			res = append(res, Peer{Section: section, Hostname: v, Perms: map[string]bool{}})
+			continue
+		}
+		if len(res) == 0 {
+			continue
+		}
+		p := &res[len(res)-1]
+		lk := strings.ToLower(k)
+		if perm, ok := peerPermKeys[lk]; ok {
+			p.Perms[perm] = strings.EqualFold(v, "enabled")
+			continue
+		}
+		switch lk {
+		case "nickname":
+			if v != "-" {
+				p.Nickname = v
+			}
+		case "ip":
+			p.IP = v
+		case "status":
+			p.Status = v
+		case "os":
+			p.OS = v
+		case "distribution":
+			p.Distro = v
+		}
+	}
+	return res
+}
+
+var nickRe = regexp.MustCompile(`^[A-Za-z0-9][A-Za-z0-9-]{0,62}$`)

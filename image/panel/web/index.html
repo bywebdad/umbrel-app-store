@@ -6,235 +6,409 @@
 <title>NordVPN · Umbrel</title>
 <style>
 :root{
-  --bg:#f4f5f7;--card:#fff;--ink:#14161a;--muted:#6b7280;--line:#e5e7eb;
-  --accent:#3b5bdb;--ok:#2f9e44;--warn:#e8590c;--bad:#c92a2a;--chip:#eef1f6;
+  --bg:#eef1f4; --surface:#ffffff; --ink:#1b2430; --muted:#5b6676; --line:#d8dee6;
+  --route:#0e7c86; --route-soft:#d7eef0; --warn:#a8670f; --warn-soft:#f6e7cf; --bad:#b42318; --bad-soft:#f8dcd9;
+  --radius-lg:18px; --radius-sm:8px;
+  --font: system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",sans-serif;
+  --display: ui-rounded,"SF Pro Rounded",system-ui,-apple-system,"Segoe UI",sans-serif;
 }
 @media (prefers-color-scheme:dark){:root{
-  --bg:#0f1115;--card:#171a20;--ink:#e8eaee;--muted:#9aa1ad;--line:#262a33;
-  --accent:#748ffc;--ok:#51cf66;--warn:#ff922b;--bad:#ff6b6b;--chip:#20242c;
+  --bg:#151a21; --surface:#1c222b; --ink:#e6eaf0; --muted:#95a0ae; --line:#2b333e;
+  --route:#3bb7c2; --route-soft:#17363a; --warn:#e0a042; --warn-soft:#3a2d17; --bad:#f0705f; --bad-soft:#3d1f1c;
 }}
 *{box-sizing:border-box}
-body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.45 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
-main{max-width:980px;margin:0 auto;padding:24px 16px 48px}
-header{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:20px;flex-wrap:wrap}
-h1{font-size:22px;margin:0;letter-spacing:-.01em}
-h2{font-size:15px;margin:0 0 12px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);font-weight:600}
-.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:16px}
-.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:18px}
-.wide{grid-column:1/-1}
-.pill{display:inline-flex;align-items:center;gap:8px;padding:6px 12px;border-radius:999px;background:var(--chip);font-weight:600;font-size:14px}
-.dot{width:9px;height:9px;border-radius:50%;background:var(--muted)}
-.on .dot{background:var(--ok)} .off .dot{background:var(--warn)} .down .dot{background:var(--bad)}
-dl{display:grid;grid-template-columns:auto 1fr;gap:4px 14px;margin:0 0 14px;font-size:14px}
-dt{color:var(--muted)} dd{margin:0;word-break:break-word}
-.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
-input,select{font:inherit;color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:9px;padding:8px 10px;min-width:0;flex:1}
-button{font:inherit;font-weight:600;border:0;border-radius:9px;padding:8px 14px;cursor:pointer;background:var(--accent);color:#fff}
-button.ghost{background:var(--chip);color:var(--ink)}
-button.danger{background:var(--bad)}
-button:disabled{opacity:.5;cursor:wait}
-.toggle{display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-top:1px solid var(--line);gap:12px}
-.toggle:first-of-type{border-top:0}
-.toggle small{display:block;color:var(--muted);font-size:12.5px}
-.switch{position:relative;width:44px;height:24px;flex:none}
-.switch input{opacity:0;width:0;height:0}
-.slider{position:absolute;inset:0;background:var(--line);border-radius:24px;transition:.15s;cursor:pointer}
-.slider:before{content:"";position:absolute;width:18px;height:18px;left:3px;top:3px;background:#fff;border-radius:50%;transition:.15s}
-.switch input:checked+.slider{background:var(--accent)}
-.switch input:checked+.slider:before{transform:translateX(20px)}
-pre{background:var(--bg);border:1px solid var(--line);border-radius:9px;padding:10px;font-size:12.5px;overflow:auto;max-height:280px;margin:0;white-space:pre-wrap}
-ul.list{list-style:none;padding:0;margin:0 0 10px}
-ul.list li{display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px dashed var(--line);font-family:ui-monospace,monospace;font-size:13.5px}
-ul.list button{padding:3px 9px;font-size:12px}
-.hint{color:var(--muted);font-size:13px;margin:8px 0 0}
-.warn{color:var(--warn)}
-#toast{position:fixed;left:50%;bottom:20px;transform:translateX(-50%);max-width:min(560px,92vw);padding:10px 14px;border-radius:10px;background:var(--ink);color:var(--bg);font-size:14px;display:none;white-space:pre-wrap}
-#toast.err{background:var(--bad);color:#fff}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.5 var(--font);font-variant-numeric:tabular-nums}
+main{max-width:1120px;margin:0 auto;padding:28px 20px 56px}
+h1,h2{margin:0;font-family:var(--display);letter-spacing:-.01em}
+h2{font-size:17px;font-weight:650}
+button,input,select{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--route);outline-offset:2px}
+.muted{color:var(--muted)}
 .hidden{display:none!important}
-a{color:var(--accent)}
+a{color:var(--route)}
+
+/* ---------- hero: route ---------- */
+.hero{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius-lg);padding:26px 28px 24px}
+.hero h1{font-size:clamp(22px,3.2vw,30px);line-height:1.2;font-weight:650;max-width:24ch}
+.hero .sub{margin:6px 0 0;color:var(--muted);max-width:70ch}
+.route{display:grid;grid-template-columns:auto 1fr auto 1fr auto;align-items:center;gap:0 14px;margin:26px 0 22px}
+.node{min-width:0}
+.node .role{display:block;color:var(--muted);font-size:13px}
+.node b{display:block;font-family:var(--display);font-size:19px;font-weight:650;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.node .addr{display:block;color:var(--muted);font-size:13.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.node.net{text-align:right}
+.link{position:relative;height:28px;min-width:40px}
+.link::before{content:"";position:absolute;left:0;right:10px;top:50%;border-top:3px solid var(--route);transform:translateY(-50%)}
+.link::after{content:"";position:absolute;right:0;top:50%;width:0;height:0;border-left:10px solid var(--route);border-top:7px solid transparent;border-bottom:7px solid transparent;transform:translateY(-50%)}
+.link span{position:absolute;left:50%;bottom:calc(50% + 6px);transform:translateX(-50%);font-size:12px;color:var(--route);white-space:nowrap}
+.hero[data-state="off"] .link::before{border-top-style:dashed;border-color:var(--warn)}
+.hero[data-state="off"] .link::after{border-left-color:var(--warn)}
+.hero[data-state="off"] .link span{color:var(--warn)}
+.hero[data-state="down"] .link::before{border-color:var(--line)}
+.hero[data-state="down"] .link::after{border-left-color:var(--line)}
+.stats{display:flex;flex-wrap:wrap;gap:6px 22px;color:var(--muted);font-size:13.5px;margin-bottom:18px}
+.stats b{color:var(--ink);font-weight:600}
+.connect{display:flex;gap:8px;flex-wrap:wrap}
+.connect input{flex:1 1 240px}
+
+/* ---------- controls ---------- */
+input[type=text],input[type=password],select{background:var(--bg);border:1px solid var(--line);border-radius:var(--radius-sm);padding:9px 11px;min-width:0}
+.btn{border:0;border-radius:var(--radius-sm);padding:9px 15px;font-weight:600;cursor:pointer;background:var(--route);color:#fff;white-space:nowrap}
+@media (prefers-color-scheme:dark){.btn{color:#0c1a1c}}
+.btn.quiet{background:transparent;color:var(--ink);box-shadow:inset 0 0 0 1px var(--line)}
+.btn.small{padding:5px 10px;font-size:13px}
+.btn:disabled{opacity:.5;cursor:progress}
+.switch{position:relative;width:42px;height:24px;flex:none}
+.switch input{position:absolute;opacity:0;inset:0;margin:0;cursor:pointer}
+.switch span{position:absolute;inset:0;border-radius:24px;background:var(--line);transition:background .15s;pointer-events:none}
+.switch span::after{content:"";position:absolute;left:3px;top:3px;width:18px;height:18px;border-radius:50%;background:#fff;transition:transform .15s}
+.switch input:checked+span{background:var(--route)}
+.switch input:checked+span::after{transform:translateX(18px)}
+.switch input:focus-visible+span{outline:2px solid var(--route);outline-offset:2px}
+
+/* ---------- layout below hero ---------- */
+.cols{display:grid;grid-template-columns:minmax(0,1.6fr) minmax(0,1fr);gap:28px;margin-top:28px;align-items:start}
+section.block{margin-bottom:28px}
+.block-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:10px}
+
+/* devices */
+.devices{list-style:none;margin:0;padding:0;background:var(--surface);border:1px solid var(--line);border-radius:var(--radius-lg)}
+.device{padding:16px 18px;border-top:1px solid var(--line);display:grid;grid-template-columns:12px minmax(0,1fr) auto;gap:4px 12px}
+.device:first-child{border-top:0}
+.device .dot{width:9px;height:9px;border-radius:50%;background:var(--line);margin-top:8px}
+.device[data-online="1"] .dot{background:var(--route)}
+.device .name{font-weight:650;font-size:16px;overflow-wrap:anywhere}
+.device .name small{font-weight:400;color:var(--muted);font-size:13px;margin-left:6px}
+.device .meta{grid-column:2/4;color:var(--muted);font-size:13.5px;display:flex;flex-wrap:wrap;gap:2px 14px}
+.device .meta span{overflow-wrap:anywhere}
+.device .perms{grid-column:2/4;display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}
+.chip{border:1px solid var(--line);background:transparent;border-radius:999px;padding:4px 11px;font-size:13px;cursor:pointer;color:var(--muted)}
+.chip[aria-pressed="true"]{background:var(--route-soft);border-color:transparent;color:var(--ink)}
+.chip[aria-pressed="true"]::before{content:"✓ ";color:var(--route);font-weight:700}
+.rename{grid-column:2/4;display:flex;gap:6px;flex-wrap:wrap;margin-top:6px}
+.rename input{flex:1 1 180px}
+.empty{padding:18px;color:var(--muted)}
+
+/* settings column */
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius-lg);padding:6px 18px}
+.row{display:flex;align-items:center;justify-content:space-between;gap:14px;padding:12px 0;border-top:1px solid var(--line)}
+.row:first-child{border-top:0}
+.row p{margin:2px 0 0;font-size:13px;color:var(--muted)}
+.row .warn{color:var(--warn)}
+.kv{display:grid;grid-template-columns:max-content minmax(0,1fr);gap:6px 16px;padding:12px 0;margin:0}
+.kv dt{color:var(--muted)}
+.kv dd{margin:0;overflow-wrap:anywhere}
+.allow{list-style:none;margin:0;padding:6px 0 0}
+.allow li{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:6px 0;font-size:14px}
+.allow-form{display:flex;gap:6px;padding:10px 0 14px;flex-wrap:wrap}
+.allow-form input{flex:1 1 140px}
+
+/* login */
+.login{display:flex;gap:8px;flex-wrap:wrap;margin-top:18px}
+.login input{flex:1 1 260px}
+
+/* diagnostics */
+details{margin-top:8px;background:var(--surface);border:1px solid var(--line);border-radius:var(--radius-lg);padding:0 18px}
+summary{cursor:pointer;padding:14px 0;font-weight:600}
+pre{background:var(--bg);border-radius:var(--radius-sm);padding:12px;font-size:12.5px;overflow:auto;max-height:260px;white-space:pre-wrap;margin:0 0 16px}
+
+.banner{border-radius:var(--radius-sm);padding:10px 14px;margin-top:14px;font-size:14px}
+.banner.bad{background:var(--bad-soft);color:var(--bad)}
+
+#toast{position:fixed;left:50%;bottom:20px;transform:translateX(-50%);max-width:min(560px,92vw);padding:10px 16px;border-radius:10px;background:var(--ink);color:var(--bg);font-size:14px;white-space:pre-wrap;opacity:0;pointer-events:none;transition:opacity .2s}
+#toast.show{opacity:1}
+#toast.err{background:var(--bad);color:#fff}
+
+@media (max-width:860px){
+  .cols{grid-template-columns:1fr}
+}
+@media (max-width:620px){
+  main{padding:18px 14px 40px}
+  .hero{padding:20px 18px}
+  .route{grid-template-columns:1fr;gap:4px}
+  .node.net{text-align:left}
+  .link{height:30px;width:28px;min-width:0;margin-left:8px}
+  .link::before{left:50%;right:auto;top:0;bottom:8px;border-top:0;border-left:3px solid var(--route);transform:none}
+  .link::after{left:50%;right:auto;top:auto;bottom:0;border-left:7px solid transparent;border-right:7px solid transparent;border-top:9px solid var(--route);transform:translateX(-45%)}
+  .hero[data-state="off"] .link::before{border-left-style:dashed;border-color:var(--warn)}
+  .hero[data-state="off"] .link::after{border-top-color:var(--warn);border-left-color:transparent}
+  .hero[data-state="down"] .link::after{border-top-color:var(--line);border-left-color:transparent}
+  .link span{left:22px;bottom:auto;top:50%;transform:translateY(-50%)}
+}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
 </style>
 </head>
 <body>
 <main>
-  <header>
-    <h1>NordVPN на Umbrel</h1>
-    <span id="pill" class="pill down"><span class="dot"></span><span id="pillText">Загрузка…</span></span>
-  </header>
+  <section class="hero" id="hero" data-state="down" aria-live="polite">
+    <h1 id="headline">Подключаюсь к NordVPN…</h1>
+    <p class="sub" id="subline"></p>
 
-  <div id="daemonDown" class="card wide hidden" style="margin-bottom:16px">
-    <h2>Демон недоступен</h2>
-    <p id="daemonErr" class="warn"></p>
-    <p class="hint">Контейнер <code>daemon</code> ещё запускается или упал. Логи: приложение → ⋯ → Troubleshoot.</p>
-  </div>
-
-  <div class="grid">
-    <section class="card" id="accountCard">
-      <h2>Аккаунт</h2>
-      <div id="loggedOut" class="hidden">
-        <p class="hint" style="margin-top:0">Создайте токен: <a href="https://my.nordaccount.com/dashboard/nordvpn/manual-configuration/" target="_blank" rel="noopener">Nord Account → NordVPN → Manual setup</a> → «Access token».</p>
-        <div class="row">
-          <input id="token" type="password" autocomplete="off" placeholder="Access token">
-          <button data-act="login">Войти</button>
-        </div>
+    <div id="routeBox">
+      <div class="route" aria-label="Маршрут трафика Umbrel">
+        <div class="node"><span class="role">Этот сервер</span><b id="selfName">Umbrel</b><span class="addr" id="selfAddr">&nbsp;</span></div>
+        <div class="link"><span id="linkLabel"></span></div>
+        <div class="node"><span class="role" id="exitRole">Выход в интернет</span><b id="exitName">—</b><span class="addr" id="exitAddr">&nbsp;</span></div>
+        <div class="link"></div>
+        <div class="node net"><span class="role">&nbsp;</span><b>Интернет</b><span class="addr">&nbsp;</span></div>
       </div>
-      <div id="loggedIn" class="hidden">
-        <dl id="accountInfo"></dl>
-        <button class="ghost" data-act="logout">Выйти</button>
-      </div>
-    </section>
-
-    <section class="card">
-      <h2>VPN всего сервера</h2>
-      <dl id="statusInfo"></dl>
-      <div class="row">
-        <input id="target" list="locations" placeholder="Страна / город / группа">
+      <div class="stats" id="stats"></div>
+      <form class="connect" id="connectForm">
+        <input type="text" id="target" list="locations" autocomplete="off" placeholder="Страна, город или группа (пусто: быстрейший)" aria-label="Локация VPN">
         <datalist id="locations"></datalist>
-      </div>
-      <div class="row" style="margin-top:10px">
-        <button data-act="connect">Подключить</button>
-        <button class="ghost" data-act="disconnect">Отключить</button>
-      </div>
-      <p class="hint">Пустое поле — быстрейший сервер. Через VPN пойдёт исходящий трафик всего Umbrel, включая все приложения. Локальная сеть и Meshnet остаются доступны.</p>
-    </section>
+        <button class="btn" type="submit" id="connectBtn">Подключить</button>
+        <button class="btn quiet" type="button" id="disconnectBtn">Отключить</button>
+      </form>
+    </div>
 
-    <section class="card">
-      <h2>Поведение</h2>
-      <div class="toggle"><div>Автоподключение<small>Подключаться при старте (после перезагрузки Umbrel) к выбранной выше локации</small></div>
-        <label class="switch"><input type="checkbox" data-set="autoconnect"><span class="slider"></span></label></div>
-      <div class="toggle"><div>Kill Switch<small class="warn">Если VPN упадёт — у Umbrel пропадёт интернет, пока соединение не восстановится</small></div>
-        <label class="switch"><input type="checkbox" data-set="killswitch"><span class="slider"></span></label></div>
-      <div class="toggle"><div>LAN Discovery<small>Доступ к Umbrel из локальной сети и к сетям Docker. Выключать не стоит</small></div>
-        <label class="switch"><input type="checkbox" data-set="lan-discovery"><span class="slider"></span></label></div>
-    </section>
+    <form class="login hidden" id="loginForm">
+      <input type="password" id="token" autocomplete="off" placeholder="Access token" aria-label="Access token NordVPN">
+      <button class="btn" type="submit">Войти</button>
+    </form>
+    <div class="banner bad hidden" id="daemonErr"></div>
+  </section>
 
-    <section class="card">
-      <h2>Meshnet</h2>
-      <div class="toggle"><div>Meshnet<small>Umbrel виден твоим устройствам с NordVPN по nord-имени</small></div>
-        <label class="switch"><input type="checkbox" data-set="meshnet"><span class="slider"></span></label></div>
-      <div id="peersBox" class="hidden">
-        <pre id="peers"></pre>
-        <div class="row" style="margin-top:10px"><button class="ghost" data-act="peers-refresh">Обновить пиров</button></div>
-        <p class="hint" style="margin-bottom:6px">Что Umbrel разрешает устройству:</p>
-        <div class="row"><input id="peerId" placeholder="hostname или IP устройства"></div>
-        <div class="row" style="margin-top:8px">
-          <select id="peerPerm" style="flex:1 1 100%">
-            <option value="incoming">Входящие к Umbrel</option>
-            <option value="local">Доступ к LAN Umbrel</option>
-            <option value="routing">Интернет через Umbrel</option>
-          </select>
-          <button data-act="peer-allow">Разрешить</button>
-          <button class="ghost" data-act="peer-deny">Запретить</button>
+  <div class="cols" id="cols">
+    <div>
+      <section class="block">
+        <div class="block-head">
+          <h2>Устройства в Meshnet</h2>
+          <label class="switch" title="Meshnet"><input type="checkbox" data-set="meshnet" aria-label="Meshnet"><span></span></label>
         </div>
-      </div>
-    </section>
+        <ul class="devices" id="devices"><li class="empty">Загрузка…</li></ul>
+        <p class="muted" style="font-size:13px;margin:10px 2px 0">Отмеченное — то, что Umbrel разрешает устройству. Устройство открывает Umbrel по адресу <code>http://имя.nord</code>.</p>
+      </section>
+    </div>
 
-    <section class="card wide">
-      <h2>Исключения из VPN (allowlist)</h2>
-      <div class="grid" style="gap:12px">
-        <div><strong>Подсети</strong><ul class="list" id="subnets"></ul></div>
-        <div><strong>Порты</strong><ul class="list" id="ports"></ul></div>
-      </div>
-      <div class="row">
-        <select id="alKind" style="flex:0 0 120px"><option value="subnet">Подсеть</option><option value="port">Порт</option></select>
-        <input id="alValue" placeholder="192.168.50.0/24 или 22">
-        <button data-act="allowlist">Добавить</button>
-      </div>
-      <p class="hint">Трафик в эти подсети/порты идёт мимо туннеля. Пример: подсеть другого офиса или устройства, к которому нужно ходить напрямую.</p>
-    </section>
+    <div>
+      <section class="block">
+        <div class="block-head"><h2>Поведение</h2></div>
+        <div class="panel">
+          <div class="row"><div>Автоподключение<p>После перезагрузки Umbrel подключится к локации из поля выше</p></div>
+            <label class="switch"><input type="checkbox" data-set="autoconnect" aria-label="Автоподключение"><span></span></label></div>
+          <div class="row"><div>Kill Switch<p class="warn">Обрыв VPN оставит Umbrel без интернета до восстановления</p></div>
+            <label class="switch"><input type="checkbox" data-set="killswitch" aria-label="Kill Switch"><span></span></label></div>
+          <div class="row"><div>Локальная сеть<p>Umbrel и Docker-сети доступны мимо VPN</p></div>
+            <label class="switch"><input type="checkbox" data-set="lan-discovery" aria-label="LAN Discovery"><span></span></label></div>
+        </div>
+      </section>
 
-    <section class="card wide">
-      <h2>Диагностика</h2>
-      <dl id="diag"></dl>
-      <pre id="lastOut">—</pre>
-    </section>
+      <section class="block">
+        <div class="block-head"><h2>Мимо VPN</h2></div>
+        <div class="panel">
+          <ul class="allow" id="allowList"></ul>
+          <form class="allow-form" id="allowForm">
+            <select id="alKind" aria-label="Тип"><option value="subnet">Подсеть</option><option value="port">Порт</option></select>
+            <input type="text" id="alValue" placeholder="192.168.50.0/24 или 22" aria-label="Значение">
+            <button class="btn quiet" type="submit">Добавить</button>
+          </form>
+        </div>
+      </section>
+
+      <section class="block hidden" id="accountBlock">
+        <div class="block-head"><h2>Аккаунт</h2><button class="btn quiet small" id="logoutBtn" type="button">Выйти</button></div>
+        <div class="panel"><dl class="kv" id="account"></dl></div>
+      </section>
+    </div>
   </div>
+
+  <details>
+    <summary>Диагностика</summary>
+    <dl class="kv" id="diag"></dl>
+    <pre id="lastOut">Здесь появится вывод последней команды.</pre>
+  </details>
 </main>
-<div id="toast"></div>
+<div id="toast" role="status"></div>
 
 <script>
 const $ = (id) => document.getElementById(id);
-let busy = false, state = null;
+const norm = (k) => (k || "").toLowerCase().replace(/[^a-z]/g, "");
+let state = null, busy = false, editing = null, editValue = "";
 
-const norm = (k) => k.toLowerCase().replace(/[^a-z]/g, "");
-const setting = (name) => {
-  if (!state) return "";
-  const kv = state.settings.find((x) => norm(x.key) === norm(name));
-  return kv ? kv.value.toLowerCase() : "";
-};
-const listOf = (word) => {
-  const kv = (state?.settings || []).find((x) => norm(x.key).includes(word));
-  return kv?.list || [];
-};
+function el(tag, attrs = {}, ...kids) {
+  const n = document.createElement(tag);
+  for (const [k, v] of Object.entries(attrs)) {
+    if (k === "on") for (const [ev, fn] of Object.entries(v)) n.addEventListener(ev, fn);
+    else if (k === "text") n.textContent = v;
+    else if (v !== false && v != null) n.setAttribute(k, v === true ? "" : v);
+  }
+  for (const c of kids.flat()) if (c != null && c !== false) n.append(c.nodeType ? c : document.createTextNode(c));
+  return n;
+}
+const get = (kvs, key) => (kvs || []).find((x) => norm(x.key) === norm(key))?.value || "";
+const setting = (key) => get(state?.settings, key).toLowerCase();
 
+function ru(s) {
+  return (s || "")
+    .replace(/(\d+)\s*hours?/g, "$1 ч").replace(/(\d+)\s*minutes?/g, "$1 мин").replace(/(\d+)\s*seconds?/g, "$1 с")
+    .replace(/(\d+)\s*days?/g, "$1 д").replace("received", "получено").replace("sent", "отправлено")
+    .replace(/MiB/g, "МиБ").replace(/GiB/g, "ГиБ").replace(/KiB/g, "КиБ");
+}
+
+let toastTimer;
 function toast(msg, err) {
   const t = $("toast");
-  t.textContent = msg; t.className = err ? "err" : ""; t.style.display = "block";
-  clearTimeout(t._h); t._h = setTimeout(() => (t.style.display = "none"), err ? 8000 : 3500);
+  t.textContent = msg; t.className = "show" + (err ? " err" : "");
+  clearTimeout(toastTimer); toastTimer = setTimeout(() => (t.className = ""), err ? 8000 : 3000);
 }
 
-function dl(el, kvs, skip = []) {
-  el.replaceChildren();
-  for (const kv of kvs) {
-    if (!kv.value || skip.includes(kv.key)) continue;
-    const dt = document.createElement("dt"); dt.textContent = kv.key;
-    const dd = document.createElement("dd"); dd.textContent = kv.value;
-    el.append(dt, dd);
+/* ---------- render ---------- */
+function renderHero() {
+  const hero = $("hero"), s = state;
+  const self = (s.peers || []).find((p) => p.section === "self");
+  $("daemonErr").classList.toggle("hidden", s.daemon);
+  $("daemonErr").textContent = s.daemon ? "" : "Демон NordVPN не отвечает: " + (s.error || "нет ответа").replace(/\.+$/, "") + ". Проверь логи контейнера daemon в Umbrel → NordVPN → Troubleshoot.";
+  $("loginForm").classList.toggle("hidden", !s.daemon || s.loggedIn);
+  $("routeBox").classList.toggle("hidden", !s.daemon || !s.loggedIn);
+
+  if (!s.daemon) {
+    hero.dataset.state = "down";
+    $("headline").textContent = "NordVPN на Umbrel не отвечает";
+    $("subline").textContent = "Обычно это значит, что контейнер ещё запускается. Подожди минуту — панель обновится сама.";
+    return;
+  }
+  if (!s.loggedIn) {
+    hero.dataset.state = "down";
+    $("headline").textContent = "Войди в аккаунт NordVPN";
+    $("subline").replaceChildren("Создай access token в ",
+      el("a", { href: "https://my.nordaccount.com/dashboard/nordvpn/manual-configuration/", target: "_blank", rel: "noopener", text: "Nord Account" }),
+      " → NordVPN → Manual setup и вставь его сюда.");
+    return;
+  }
+  $("selfName").textContent = self ? (self.nickname || self.hostname.replace(/\.nord$/, "")) : "Umbrel";
+  $("selfAddr").textContent = self?.ip || "Meshnet выключен";
+
+  if (s.connected) {
+    hero.dataset.state = "on";
+    $("headline").textContent = "Трафик Umbrel идёт через NordVPN";
+    $("subline").textContent = "Все приложения выходят в интернет с IP сервера NordVPN. Локальная сеть и Meshnet работают напрямую.";
+    $("exitRole").textContent = "Сервер NordVPN";
+    $("exitName").textContent = get(s.status, "Server") || get(s.status, "Hostname");
+    $("exitAddr").textContent = [get(s.status, "City"), get(s.status, "IP")].filter(Boolean).join(", ");
+    $("linkLabel").textContent = [get(s.status, "Current technology"), get(s.status, "Current protocol")].filter(Boolean).join(" / ");
+    $("connectBtn").textContent = "Сменить сервер";
+    $("disconnectBtn").classList.remove("hidden");
+    const st = [];
+    const up = get(s.status, "Uptime"), tr = get(s.status, "Transfer");
+    if (up) st.push(el("span", {}, "В сети ", el("b", { text: ru(up) })));
+    if (tr) st.push(el("span", { text: ru(tr) }));
+    $("stats").replaceChildren(...st);
+  } else {
+    hero.dataset.state = "off";
+    $("headline").textContent = "VPN отключён: Umbrel выходит в интернет напрямую";
+    $("subline").textContent = "Провайдер видит трафик сервера. Подключи VPN, чтобы скрыть его.";
+    $("exitRole").textContent = "Выход в интернет";
+    $("exitName").textContent = "Провайдер";
+    $("exitAddr").textContent = "без шифрования";
+    $("linkLabel").textContent = "напрямую";
+    $("connectBtn").textContent = "Подключить";
+    $("disconnectBtn").classList.add("hidden");
+    $("stats").replaceChildren();
   }
 }
 
-function list(el, items, kind) {
-  el.replaceChildren();
-  if (!items.length) { const li = document.createElement("li"); li.textContent = "—"; el.append(li); return; }
-  for (const v of items) {
-    const li = document.createElement("li");
-    const span = document.createElement("span"); span.textContent = v;
-    const b = document.createElement("button"); b.className = "ghost"; b.textContent = "Убрать";
-    b.onclick = () => act("allowlist", { kind, value: v, remove: true });
-    li.append(span, b); el.append(li);
+const PERMS = [
+  ["incoming", "Входящие к Umbrel"],
+  ["local", "Локальная сеть Umbrel"],
+  ["routing", "Интернет через Umbrel"],
+];
+
+function deviceRow(p) {
+  const isSelf = p.section === "self";
+  const short = p.hostname.replace(/\.nord$/, "");
+  const name = p.nickname || short;
+  const online = isSelf || (p.status || "").toLowerCase() === "connected";
+  const osName = { macos: "macOS", ios: "iOS", linux: "Linux", android: "Android", windows: "Windows" }[p.os] || p.os;
+  const os = [osName, p.distro].filter(Boolean).join(" ");
+  const kids = [
+    el("span", { class: "dot", "aria-hidden": "true" }),
+    el("div", { class: "name" }, name, isSelf ? el("small", { text: "этот сервер" }) : (online ? null : el("small", { text: "не в сети" }))),
+    editing === p.hostname ? null : el("button", { class: "btn quiet small", type: "button", text: "Переименовать",
+      on: { click: () => { editing = p.hostname; editValue = p.nickname || ""; renderDevices(); $("renameInput")?.focus(); } } }),
+    el("div", { class: "meta" }, [p.hostname, p.ip, os].filter(Boolean).map((t) => el("span", { text: t }))),
+  ];
+  if (editing === p.hostname) {
+    kids.push(el("form", { class: "rename", on: { submit: (e) => {
+      e.preventDefault();
+      const v = editValue.trim(); editing = null;
+      act("nickname", { value: isSelf ? "" : p.hostname, target: v }, v ? "Переименовано" : "Имя сброшено");
+    } } },
+      el("input", { type: "text", id: "renameInput", value: editValue, placeholder: "home-umbrel — пусто, чтобы вернуть исходное", "aria-label": "Новое имя",
+        on: { input: (e) => (editValue = e.target.value) } }),
+      el("button", { class: "btn small", type: "submit", text: "Сохранить" }),
+      el("button", { class: "btn quiet small", type: "button", text: "Отмена", on: { click: () => { editing = null; renderDevices(); } } })));
   }
+  if (!isSelf) {
+    kids.push(el("div", { class: "perms" }, PERMS.map(([key, label]) =>
+      el("button", { class: "chip", type: "button", "aria-pressed": String(!!p.perms?.[key]), text: label,
+        on: { click: () => act("peer", { name: key, on: !p.perms?.[key], value: p.hostname }, p.perms?.[key] ? "Запрещено" : "Разрешено") } }))));
+  }
+  return el("li", { class: "device", "data-online": online ? "1" : "0" }, kids);
+}
+
+function renderDevices() {
+  const list = $("devices"), s = state;
+  const mesh = setting("meshnet").startsWith("enabled");
+  if (!s.loggedIn) { list.replaceChildren(el("li", { class: "empty", text: "Войди в аккаунт, чтобы включить Meshnet." })); return; }
+  if (!mesh) { list.replaceChildren(el("li", { class: "empty", text: "Meshnet выключен. Включи его переключателем — Umbrel станет доступен твоим устройствам с NordVPN." })); return; }
+  if (s.peersError) { list.replaceChildren(el("li", { class: "empty", text: "Не удалось получить список устройств: " + s.peersError })); return; }
+  const peers = [...(s.peers || [])].sort((a, b) => (a.section === "self" ? -1 : b.section === "self" ? 1 : 0));
+  list.replaceChildren(...peers.map(deviceRow));
+  if (peers.length < 2) list.append(el("li", { class: "empty", text: "Других устройств пока нет. Включи Meshnet в приложении NordVPN на телефоне или ноутбуке." }));
+}
+
+function renderSettings() {
+  for (const cb of document.querySelectorAll("[data-set]")) {
+    cb.checked = setting(cb.dataset.set).startsWith("enabled");
+    cb.disabled = busy || !state.daemon || !state.loggedIn;
+  }
+  const subnets = (state.settings || []).find((x) => norm(x.key).includes("subnets"))?.list || [];
+  const ports = (state.settings || []).find((x) => norm(x.key).includes("ports"))?.list || [];
+  const items = [...subnets.map((v) => ["subnet", v]), ...ports.map((v) => ["port", v])];
+  $("allowList").replaceChildren(...(items.length ? items.map(([kind, v]) =>
+    el("li", {}, el("span", {}, kind === "port" ? "Порт " : "", v),
+      el("button", { class: "btn quiet small", type: "button", text: "Убрать",
+        on: { click: () => act("allowlist", { kind, value: v, remove: true }, "Убрано") } })))
+    : [el("li", { class: "muted", text: "Весь трафик идёт через VPN, кроме локальной сети." })]));
+
+  const acc = state.account || [];
+  $("accountBlock").classList.toggle("hidden", !state.loggedIn);
+  const email = get(acc, "Email address") || get(acc, "Email Address");
+  const sub = get(acc, "Subscription") || get(acc, "VPN Service");
+  $("account").replaceChildren(
+    el("dt", { text: "Email" }), el("dd", { text: email || "—" }),
+    el("dt", { text: "Подписка" }), el("dd", { text: sub.replace(/^Active until/i, "активна до").replace(/^Active/i, "активна") || "—" }));
+
+  $("diag").replaceChildren(
+    el("dt", { text: "Клиент" }), el("dd", { text: state.version || "—" }),
+    ...(state.settings || []).filter((x) => !x.list).flatMap((x) => [el("dt", { text: x.key }), el("dd", { text: x.value })]));
 }
 
 function render() {
-  const pill = $("pill"), txt = $("pillText");
-  $("daemonDown").classList.toggle("hidden", state.daemon);
-  $("daemonErr").textContent = state.error || "";
-  if (!state.daemon) { pill.className = "pill down"; txt.textContent = "Демон недоступен"; return; }
-  if (state.connected) {
-    pill.className = "pill on";
-    const where = [state.status.find(x=>x.key==="Country")?.value, state.status.find(x=>x.key==="City")?.value].filter(Boolean).join(", ");
-    txt.textContent = "VPN: " + (where || "подключён");
-  } else { pill.className = "pill off"; txt.textContent = "VPN отключён"; }
-
-  $("loggedIn").classList.toggle("hidden", !state.loggedIn);
-  $("loggedOut").classList.toggle("hidden", state.loggedIn);
-  dl($("accountInfo"), state.account);
-  dl($("statusInfo"), state.status);
-
-  for (const cb of document.querySelectorAll("[data-set]")) {
-    cb.checked = setting(cb.dataset.set).startsWith("enabled");
-    cb.disabled = busy || !state.loggedIn && cb.dataset.set === "meshnet";
-  }
-  const mesh = setting("meshnet").startsWith("enabled");
-  $("peersBox").classList.toggle("hidden", !mesh);
-  $("peers").textContent = state.peers || "—";
-  list($("subnets"), listOf("subnets"), "subnet");
-  list($("ports"), listOf("ports"), "port");
-  dl($("diag"), [{ key: "Клиент", value: state.version }, ...state.settings.filter((x) => !x.list)]);
+  renderHero();
+  $("cols").classList.toggle("hidden", !state.daemon || !state.loggedIn);
+  if (editing === null) renderDevices();
+  renderSettings();
+  for (const b of document.querySelectorAll(".btn,.chip")) b.disabled = busy;
 }
 
+/* ---------- data ---------- */
 async function refresh() {
   if (busy) return;
   try {
     const r = await fetch("api/state", { cache: "no-store" });
     state = await r.json();
     render();
-  } catch (e) { $("pillText").textContent = "Панель недоступна"; }
+  } catch {
+    $("headline").textContent = "Панель потеряла связь с Umbrel";
+    $("hero").dataset.state = "down";
+  }
 }
 
-async function act(name, body = {}) {
+async function act(name, body = {}, okText = "Готово") {
   if (busy) return;
-  busy = true;
-  document.querySelectorAll("button,[data-set]").forEach((b) => (b.disabled = true));
+  busy = true; if (state) render();
   toast("Выполняю…");
   try {
     const r = await fetch("api/action/" + name, {
@@ -244,37 +418,30 @@ async function act(name, body = {}) {
     });
     const j = await r.json();
     $("lastOut").textContent = j.output || j.error || "OK";
-    if (!r.ok) toast(j.error || "Ошибка", true); else toast("Готово");
-  } catch (e) { toast(String(e), true); }
+    r.ok ? toast(okText) : toast(j.error || "Команда не выполнилась", true);
+  } catch (e) { toast("Нет связи с панелью: " + e.message, true); }
   busy = false;
-  document.querySelectorAll("button").forEach((b) => (b.disabled = false));
   await refresh();
 }
 
-document.addEventListener("click", (e) => {
-  const a = e.target.closest("button[data-act]");
-  if (!a) return;
-  const n = a.dataset.act;
-  if (n === "login") { act("login", { token: $("token").value }); $("token").value = ""; }
-  else if (n === "connect") act("connect", { target: $("target").value });
-  else if (n === "allowlist") act("allowlist", { kind: $("alKind").value, value: $("alValue").value });
-  else if (n === "peer-allow" || n === "peer-deny") act("peer", { name: $("peerPerm").value, on: n === "peer-allow", value: $("peerId").value });
-  else if (n === "logout" && !confirm("Выйти из аккаунта NordVPN на Umbrel? VPN и Meshnet отключатся.")) return;
-  else act(n);
-});
+$("connectForm").addEventListener("submit", (e) => { e.preventDefault(); act("connect", { target: $("target").value }, "Подключено"); });
+$("disconnectBtn").addEventListener("click", () => act("disconnect", {}, "VPN отключён"));
+$("loginForm").addEventListener("submit", (e) => { e.preventDefault(); const t = $("token").value; $("token").value = ""; act("login", { token: t }, "Вход выполнен"); });
+$("logoutBtn").addEventListener("click", () => { if (confirm("Выйти из аккаунта NordVPN на Umbrel? VPN и Meshnet отключатся.")) act("logout", {}, "Вы вышли"); });
+$("allowForm").addEventListener("submit", (e) => { e.preventDefault(); act("allowlist", { kind: $("alKind").value, value: $("alValue").value }, "Добавлено"); $("alValue").value = ""; });
 
 document.addEventListener("change", (e) => {
   const cb = e.target.closest("[data-set]");
   if (!cb) return;
   const name = cb.dataset.set, on = cb.checked;
-  if (name === "lan-discovery" && !on && !confirm("Без LAN Discovery при включённом VPN Umbrel может пропасть из локальной сети. Точно выключить?")) { cb.checked = true; return; }
-  if (name === "killswitch" && on && !confirm("С Kill Switch при обрыве VPN у Umbrel не будет интернета. Включить?")) { cb.checked = false; return; }
-  act("set", { name, on, target: name === "autoconnect" ? $("target").value : "" });
+  if (name === "lan-discovery" && !on && !confirm("Без доступа из локальной сети Umbrel может пропасть из домашней сети, пока включён VPN. Выключить?")) { cb.checked = true; return; }
+  if (name === "killswitch" && on && !confirm("При обрыве VPN у Umbrel не будет интернета, пока соединение не восстановится. Включить?")) { cb.checked = false; return; }
+  if (name === "meshnet" && !on && !confirm("Без Meshnet Umbrel станет недоступен твоим устройствам вне дома. Выключить?")) { cb.checked = true; return; }
+  act("set", { name, on, target: name === "autoconnect" ? $("target").value : "" }, on ? "Включено" : "Выключено");
 });
 
 fetch("api/countries").then((r) => r.json()).then((j) => {
-  const dlist = $("locations");
-  for (const c of [...j.groups, ...j.countries]) { const o = document.createElement("option"); o.value = c; dlist.append(o); }
+  $("locations").replaceChildren(...[...j.groups, ...j.countries].map((c) => el("option", { value: c })));
 }).catch(() => {});
 
 refresh();

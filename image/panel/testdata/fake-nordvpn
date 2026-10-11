@@ -1,12 +1,23 @@
 #!/usr/bin/env bash
+# Fake nordvpn CLI for local panel development. FAKE_STATE=on|off|logout|down
+state="${FAKE_STATE:-on}"
+[ "$state" = down ] && { echo "Whoops! Cannot reach System Daemon." >&2; exit 1; }
 case "$*" in
-  status) printf '\r-\r  \rStatus: Connected\nCountry: Poland\nCity: Warsaw\nIP: 1.2.3.4\n';;
-  account) printf 'Email Address: me@example.com\nVPN Service: Active\n';;
-  settings) printf 'Kill Switch: disabled\nAuto-connect: enabled\nMeshnet: enabled\nLAN Discovery: enabled\nAllowlisted subnets:\n\t100.64.0.0/10\n';;
-  version) echo "NordVPN Version 4.1.0";;
-  "meshnet peer list") printf 'This device:\nHostname: umbrel-abc.nord\nIP: 100.70.1.2\n';;
+  status)
+    if [ "$state" = on ]; then
+      printf '\r-\r  \rStatus: Connected\nServer: Poland #273\nHostname: pl273.nordvpn.com\nIP: 187.15.162.35\nCountry: Poland\nCity: Warsaw\nCurrent technology: NORDLYNX\nCurrent protocol: UDP\nPost-quantum VPN: Disabled\nTransfer: 61.08 MiB received, 69.63 MiB sent\nUptime: 1 hour 46 minutes 49 seconds\n'
+    else
+      printf 'Status: Disconnected\n'
+    fi ;;
+  account)
+    if [ "$state" = logout ]; then echo "You are not logged in."; exit 1; fi
+    printf 'Account information:\nEmail address: ivan@example.com\nAccount created: Aug 27, 2026\nSubscription: Active until Aug 27, 2028\nDedicated IP: Inactive\nDedicated Server: Inactive\nMulti-factor authentication (MFA): Turned off\nTerms of Service - https://my.nordaccount.com/legal/terms-of-service/?utm_medium=app&utm_source=nordvpn-linux-cli\nAuto-renewal terms - https://my.nordaccount.com/legal/terms-of-service/subscription/?utm_medium=app\n' ;;
+  settings)
+    printf 'Technology: NORDLYNX\nFirewall: enabled\nFirewall Mark: 0xe1f1\nRouting: enabled\nUser Consent: disabled\nKill Switch: disabled\nReal-time protection: disabled\nNotify: enabled\nAuto-connect: enabled\nMeshnet: enabled\nDNS: disabled\nLAN Discovery: enabled\nVirtual Location: enabled\nPost-quantum VPN: disabled\nARP Ignore: enabled\n' ;;
+  version) echo "NordVPN Version 4.2.1";;
+  "meshnet peer list")
+    printf 'This device:\nHostname: ivan.barysiuk-himalayas.nord\nNickname: home-umbrel\nIP: 100.80.19.203\nPublic Key: EwJl=\nOS: linux\nDistribution: Ubuntu\n\nLocal Peers:\nHostname: ivan.barysiuk-everest.nord\nNickname: ivan-mac\nStatus: connected\nIP: 100.80.16.90\nPublic Key: fYUC=\nOS: macos\nDistribution: 27.0.1\nAllow Incoming Traffic: enabled\nAllow Routing: disabled\nAllow Local Network Access: enabled\nAllow Sending Files: enabled\nAllows Incoming Traffic: enabled\nAllows Routing: disabled\nAllows Local Network Access: disabled\nAllows Sending Files: enabled\n\nHostname: ivan.barysiuk-andes.nord\nNickname: -\nStatus: disconnected\nIP: 100.80.22.14\nOS: ios\nDistribution: 26.1\nAllow Incoming Traffic: disabled\nAllow Routing: disabled\nAllow Local Network Access: disabled\nAllow Sending Files: enabled\n\nExternal Peers:\n[no peers]\n' ;;
   countries) printf 'Germany, Poland\tUnited_States\n';;
   groups) printf 'P2P, Double_VPN\n';;
-  connect*) echo "You are connected to $2"; ;;
-  *) echo "unknown $*" >&2; exit 1;;
+  *) echo "ok: $*";;
 esac

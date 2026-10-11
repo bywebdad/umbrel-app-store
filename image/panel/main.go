@@ -62,7 +62,8 @@ type State struct {
 	Connected bool   `json:"connected"`
 	Status    []KV   `json:"status"`
 	Settings  []KV   `json:"settings"`
-	Peers     string `json:"peers"`
+	Peers     []Peer `json:"peers"`
+	PeersErr  string `json:"peersError,omitempty"`
 }
 
 func (s *Server) run(timeout time.Duration, args ...string) (string, error) {
@@ -72,7 +73,7 @@ func (s *Server) run(timeout time.Duration, args ...string) (string, error) {
 }
 
 func (s *Server) state() State {
-	st := State{Account: []KV{}, Status: []KV{}, Settings: []KV{}}
+	st := State{Account: []KV{}, Status: []KV{}, Settings: []KV{}, Peers: []Peer{}}
 	status, err := s.run(15*time.Second, "status")
 	if err != nil {
 		st.Error = FirstLine(err.Error())
@@ -98,9 +99,9 @@ func (s *Server) state() State {
 	st.Settings = ParseKV(settings)
 	if st.LoggedIn && strings.EqualFold(Get(st.Settings, "Meshnet"), "enabled") {
 		if peers, err := s.run(20*time.Second, "meshnet", "peer", "list"); err == nil {
-			st.Peers = peers
+			st.Peers = ParsePeers(peers)
 		} else {
-			st.Peers = FirstLine(err.Error())
+			st.PeersErr = FirstLine(err.Error())
 		}
 	}
 	return st
@@ -204,6 +205,26 @@ func action(path string, r actionReq) (args []string, timeout time.Duration, err
 			verb = "allow"
 		}
 		return []string{"meshnet", "peer", r.Name, verb, peer}, timeout, nil
+	case "nickname":
+		// Value = peer (empty for this Umbrel), Target = new nickname (empty = remove).
+		nick := strings.TrimSpace(r.Target)
+		if nick != "" && !nickRe.MatchString(nick) {
+			return nil, 0, errors.New("имя: латинские буквы, цифры и дефис, до 63 символов")
+		}
+		peer := strings.TrimSpace(r.Value)
+		if peer == "" {
+			if nick == "" {
+				return []string{"meshnet", "remove", "nickname"}, timeout, nil
+			}
+			return []string{"meshnet", "set", "nickname", nick}, timeout, nil
+		}
+		if !peerRe.MatchString(peer) {
+			return nil, 0, errors.New("укажите hostname, nickname или IP пира")
+		}
+		if nick == "" {
+			return []string{"meshnet", "peer", "nickname", "remove", peer}, timeout, nil
+		}
+		return []string{"meshnet", "peer", "nickname", "set", peer, nick}, timeout, nil
 	case "peers-refresh":
 		return []string{"meshnet", "peer", "refresh"}, timeout, nil
 	}
